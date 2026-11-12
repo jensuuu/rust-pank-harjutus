@@ -15,7 +15,7 @@ impl Menu {
         // nagu create thread fivemis aga liht loop
         loop {
 
-            // kasutaja sisestus
+            // kasutaja sisestus sõne
             let mut user_option = String::new();
 
             println!("==============================");
@@ -36,10 +36,10 @@ impl Menu {
 
             io::stdout().flush()?; // sund tekst ekraanile
 
-            // loeb kasutaja sisendit
+            // loeb kasutaja sisend sõne
             io::stdin().read_line(&mut user_option)?; 
 
-            // kontrollib sisendi määrust kas on või on tühi
+            // kontrollib  sisend sõne määrust kas on või on tühi
             let user_option: u8 = match user_option.trim().parse() {
                 Ok(option) => option,
                 Err(_) => {
@@ -48,8 +48,8 @@ impl Menu {
                 }
             };
         
-        // kasutaja valiku kontroll
-        match user_option {
+            // kasutaja valiku kontroll
+            match user_option  {
                 1 => {
                     bank::User::create()?;
                 },

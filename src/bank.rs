@@ -29,17 +29,17 @@ impl User { // esindab klassi
     }
 
     pub fn create() -> io::Result<()> {
-        // kasutajale määratud väljad ja muutujad
+        // kasutajale määratud sõned ja muutujad
         let mut tunnus = String::new();
         let mut password = String::new();
 
         let directory = "./accounts";
 
-        // loob muutuvaks suvalised numbrid kuna mut (rng) võimaldab muutumist
+        // loob muutuvaks suvalised numbrid kuna mut (rng) sõne võimaldab muutumist
         let mut rng = rand::rng();
         let account_number: u64 = rng.random_range(10000000..100000000);
 
-        // loob kausta kui ei eksisteeri
+        // loob kasutaja kausta kui ei eksisteeri
         fs::create_dir_all(directory)?;
 
         Self::show("Sisesta kasutajatunnus", "");
@@ -52,7 +52,7 @@ impl User { // esindab klassi
 
         io::stdin().read_line(&mut password)?;
 
-        // puhastab väljad
+        // puhastab sõne väljad
         let tunnus = tunnus.trim();
         let password = password.trim();
 
