@@ -1,7 +1,8 @@
 use std::io::{self, Write};
+use std::fs;
 
 use crate::bank;
-
+use crate::bank::User;
 pub struct Menu;
 
 
@@ -26,12 +27,12 @@ impl Menu {
 
             println!("Vali õige tegevus >>");
 
-            io::stdout().flush()?;
+            io::stdout().flush()?; // sund tekst ekraanile
 
             // loeb kasutaja sisendit
             io::stdin().read_line(&mut user_option)?; 
 
-            // kontrollib sisendi määrust kas on või ei
+            // kontrollib sisendi määrust kas on või on tühi
             let user_option: u8 = match user_option.trim().parse() {
                 Ok(option) => option,
                 Err(_) => {
@@ -39,17 +40,20 @@ impl Menu {
                     continue;
                 }
             };
-
+        
+        // kasutaja valiku kontroll
         match user_option {
                 1 => {
                     bank::User::create()?;
                 },
                 2 => {
                     println!("Sisse logimine");
+                    bank::User::login()?;
                 },
                 3 => {
                     println!("Head aega!");
-                    break Ok(());
+                    break;
+                    // Ok(()) ei tohi siin olla
                 },
                 _ => {
                     println!("Pole võimalik!");
@@ -61,9 +65,112 @@ impl Menu {
             println!("TERVIST PANGANDUSE POOLT! {}", user_option);
 
 
-            Ok(());
+           
         }
-       
+
+        // tagastus ei tohi olla loopi sees
+        Ok(())
 
     }
+
+
+
+
+    // kasutaja pangakonto menüü
+    pub fn account_menu(mut user: User, account: &str) -> io::Result<()> {
+        loop {
+            println!("\n==============================");
+            println!("       PANGA KONTOMENÜÜ");
+            println!("==============================");
+            println!("Kasutaja: {}", user.username);
+            println!("Saldo: {:.2} EUR", user.balance);
+            println!("==============================");
+            println!("1. Vaata kontojääki");
+            println!("2. Lisa raha");
+            println!("3. Väljasta raha");
+            println!("4. Logi välja");
+            println!("==============================");
+
+            print!("Vali tegevus >> ");
+            io::stdout().flush()?;
+
+            let mut option = String::new();
+            io::stdin().read_line(&mut option)?;
+
+            match option.trim() {
+                "1" => {
+                    println!("Kontojääk: {:.2} EUR", user.balance);
+                }
+
+                "2" => {
+                    print!("Sisesta lisatav summa >> ");
+                    io::stdout().flush()?;
+
+                    let mut amount = String::new();
+                    io::stdin().read_line(&mut amount)?;
+
+                    let amount: u128 = match amount.trim().replace(',', ".").parse() {
+                        Ok(value) if value > 0 => value,
+                        _ => {
+                            println!("Vigane summa!");
+                            continue;
+                        }
+                    };
+
+                    user.balance += amount;
+
+                    let json = serde_json::to_string_pretty(&user)
+                        .map_err(io::Error::other)?;
+
+                    fs::write(account, json)?;
+
+                    println!("Raha edukalt lisatud!");
+                }
+
+                "3" => {
+                    print!("Sisesta väljastatav summa >> ");
+                    io::stdout().flush()?;
+
+                    let mut amount = String::new();
+                    io::stdin().read_line(&mut amount)?;
+
+                    let amount: u128 = match amount.trim().replace(',', ".").parse() {
+                        Ok(value) if value > 0 => value,
+                        _ => {
+                            println!("Vigane summa!");
+                            continue;
+                        }
+                    };
+
+                    if amount > user.balance {
+                        println!("Kontol pole piisavalt raha!");
+                        continue;
+                    }
+
+                    user.balance -= amount;
+
+                    let json = serde_json::to_string_pretty(&user)
+                        .map_err(io::Error::other)?;
+
+                    fs::write(account, json)?;
+
+                    println!(
+                        "Raha edukalt väljastatud!" 
+                    );
+                }
+
+                "4" => {
+                    println!("Oled edukalt välja logitud!");
+                    break;
+                }
+
+                _ => {
+                    println!("Vale valik!");
+                }
+            }
+        }
+
+        Ok(())
+    }
+
 }

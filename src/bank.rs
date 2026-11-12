@@ -1,36 +1,36 @@
+
 use std::fs;
 use std::io::{self, Write};
 use rand::RngExt;
+use serde::{Serialize, Deserialize};
 
-pub struct User; // klassi määrang
+use crate::menu;
 
-// i8    - Signed 8-bit integer (negatiivsed ja positiivsed täisarvud)
-// i16   - Signed 16-bit integer
-// i32   - Signed 32-bit integer
-// i64   - Signed 64-bit integer
-// i128  - Signed 128-bit integer
-// isize - Signed integer, suurus sõltub arhitektuurist (32/64-bit)
+#[derive(Serialize, Deserialize)]
+pub struct User { // klassi määrang
+    pub account_number: u64,
+    pub username: String,
+    pub password: String,
+    pub balance: u128,
+}
 
-// u8    - Unsigned 8-bit integer (ainult null ja positiivsed täisarvud)
-// u16   - Unsigned 16-bit integer
-// u32   - Unsigned 32-bit integer
-// u64   - Unsigned 64-bit integer
-// u128  - Unsigned 128-bit integer
-// usize - Unsigned integer, suurus sõltub arhitektuurist (32/64-bit) 
+impl User { // esindab klassi
+    const DEBUG: bool = true; // debug režiim
 
-// f32 - 32-bit floating-point number (komakohaga arv)
-// f64 - 64-bit floating-point number (komakohaga arv)
+    // parem printida andmeid kui println!() ja println!() on liiga pikk
+    // info_type on valikuline
+    pub fn show(msg: &str, info: &str) {
+        if info.is_empty() {
+            println!("{}", msg);
+            return;
+        }
 
-// bool - Boolean (true / false)
-// char - Üks Unicode märk
-// str  - String slice (muutmatu tekstiviide)
-// String - Dünaamiline muudetav tekst
+        println!("{}: {}", msg, info);
+    }
 
-impl User { // esindab klassi 
-
-    pub fn create() -> io::Result<()> { // gives I/O error and info // klass funktsioon
-        // Bank accounts directory
-        let mut name = String::new();
+    pub fn create() -> io::Result<()> {
+        // kasutajale määratud väljad ja muutujad
+        let mut tunnus = String::new();
         let mut password = String::new();
 
         let directory = "./accounts";
@@ -42,39 +42,147 @@ impl User { // esindab klassi
         // loob kausta kui ei eksisteeri
         fs::create_dir_all(directory)?;
 
-
-        println!("Sisesta nimi"); 
+        Self::show("Sisesta kasutajatunnus", "");
         io::stdout().flush()?;
 
-        io::stdin().read_line(&mut name).expect("Vigane nime väli!"); // loeb kasutaja sisendit
+        io::stdin().read_line(&mut tunnus)?;
 
-        println!("Sisesta parool");
+        Self::show("Sisesta parool", "");
         io::stdout().flush()?;
-        io::stdin().read_line(&mut password).expect("Vigane parooli väli!");
 
+        io::stdin().read_line(&mut password)?;
 
         // puhastab väljad
-        let name = name.trim();
+        let tunnus = tunnus.trim();
         let password = password.trim();
 
-        // salvestab kasutaja andmed faili ja kasuta
-        let acnum: u64 = account_number;
-        let account_data = format!("{}/kasutaja-{}.txt", directory, acnum);
+        if tunnus.is_empty() || password.is_empty() {
+            Self::show("Palun täida kõik väljad!", "ERROR");
+            return Ok(());
+        }
 
-        let mut file = fs::File::create(&account_data)?;
+        // salvestab kasutaja andmed faili
+        let acnum: u64 = account_number;
+
+        let account_data = format!("{}/kasutaja-{}.json", directory, tunnus);
+
+
+
+
+
+
+        // kontrollib, kas konto on juba olemas
+        if fs::metadata(&account_data).is_ok() {
+            Self::show("Selline kasutaja on juba olemas!", "ERROR");
+            return Ok(());
+        }
+
+        let user = User {
+            account_number: acnum,
+            username: tunnus.to_string(),
+            password: password.to_string(),
+            balance: 0,
+        };
 
         // andmete kirjutamine faili sisse
-        writeln!(file, "NR: {}", acnum)?;
-        writeln!(file, "Nimi: {}", name)?;
-        writeln!(file, "Parool: {}", password)?;
+        let json = serde_json::to_string_pretty(&user)
+            .map_err(io::Error::other)?;
 
-    
+        fs::write(&account_data, json)?;
 
-        println!("Directory: {}", directory);
-        println!("Account number: {}", account_number);
-        println!("User input {}, {}", name, password);
+        if Self::DEBUG {
+            Self::show("Directory", directory);
+            Self::show("Account number", &account_number.to_string());
+        }
+
+        Self::show("Konto edukalt loodud!", "SUCCESS");
+
+        Ok(())
+    }
+
+    pub fn login() -> io::Result<()> {
+        // kasutajale määratud väljad ja muutujad
+        let mut tunnus = String::new();
+        let mut password = String::new();
+
+        println!("==============================");
+        println!("       PANGA SISSELOGIMINE");
+        println!("==============================");
+
+        // küsib kasutajalt konto tunnust ja parooli
+        print!("Sisesta konto tunnus: ");
+        io::stdout().flush()?;
+        io::stdin().read_line(&mut tunnus)?;
+
+        print!("Sisesta konto parool: ");
+        io::stdout().flush()?;
+        io::stdin().read_line(&mut password)?;
+
+        // puhastab väljad
+        let actunnus = tunnus.trim();
+        let acpw = password.trim();
+
+        let directory = "./accounts";
+
+        // kontrollib, kas väljad on täidetud
+        if actunnus.is_empty() || acpw.is_empty() {
+            println!("Palun täida kõik väljad");
+            return Ok(());
+        }
+
+        // määrab faili nime ja asukoha
+        let account: String = format!(
+            "{}/kasutaja-{}.json",
+            directory,
+            actunnus
+        );
+        // loeb faili sisu
+        let account_data = match fs::read_to_string(&account) {
+            Ok(data) => data,
+            Err(_) => {
+                println!("Konto ei leitud!");
+                return Ok(());
+            }
+        };
+
+        // loeb JSON-failist kasutaja andmed
+        let account_data: User = match serde_json::from_str(&account_data) {
+            Ok(data) => data,
+            Err(_) => {
+                println!("Konto andmete lugemine ebaõnnestus!");
+                return Ok(());
+            }
+        };
+
+        // võrdleb sisestatud parooli salvestatud parooliga
+        let stored_password = account_data.password.trim();
+       
+
+        match stored_password {
+            saved_password if saved_password == acpw => {
+                println!("Sisselogimine õnnestus!");
+
+                println!("Tere tulemast, {}!", account_data.username);
+
+                if Self::DEBUG {
+                    Self::show(
+                        "Account number",
+                        &account_data.account_number.to_string()
+                    );
+
+                    Self::show(
+                        "Balance",
+                        &account_data.balance.to_string()
+                    );
+                }
+                menu::Menu::account_menu(account_data, &account)?;
+            }
+
+            _ => {
+                println!("Vale kasutajatunnus või parool!");
+            }
+        }
 
         Ok(())
     }
 }
-
