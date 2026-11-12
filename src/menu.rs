@@ -3,6 +3,8 @@ use std::fs;
 
 use crate::bank;
 use crate::bank::User;
+use crate::vahendid::hash_menu;
+use crate::vahendid::de_hash;
 pub struct Menu;
 
 
@@ -22,6 +24,11 @@ impl Menu {
             println!("1. Loo konto");
             println!("2. Logi sisse");
             println!("3. Välju");
+            println!("==============================");
+            println!("     MUUD VAHENDID");
+            println!("==============================");
+            println!("4. Hashimine");
+            println!("5. De-hashimine");
             println!("==============================");
 
 
@@ -54,6 +61,14 @@ impl Menu {
                     println!("Head aega!");
                     break;
                     // Ok(()) ei tohi siin olla
+                },
+                4 => {
+                    hash_menu::HashMenu::show()?;
+
+                },
+                5 => {
+                    println!("De-hashimise tööriist");
+                    de_hash::DeHashMenu::show()?;
                 },
                 _ => {
                     println!("Pole võimalik!");
