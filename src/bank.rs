@@ -1,5 +1,6 @@
 
-use std::fs;
+use std::collections::HashMap;
+use std::{clone, fs};
 use std::io::{self, Write};
 use rand::RngExt;
 use serde::{Serialize, Deserialize};
@@ -12,6 +13,9 @@ pub struct User { // klassi määrang
     pub username: String,
     pub password: String,
     pub balance: u128,
+    pub basket: Vec<String>,
+    loc: String
+    
 }
 
 impl User { // esindab klassi
@@ -27,6 +31,8 @@ impl User { // esindab klassi
 
         println!("{}: {}", msg, info);
     }
+
+    
 
     pub fn create() -> io::Result<()> {
         // kasutajale määratud sõned ja muutujad
@@ -82,6 +88,8 @@ impl User { // esindab klassi
             username: tunnus.to_string(),
             password: password.to_string(),
             balance: 0,
+            basket: [].to_vec(),
+            loc: directory.to_string(),
         };
 
         // andmete kirjutamine faili sisse

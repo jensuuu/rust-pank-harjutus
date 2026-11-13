@@ -1,6 +1,10 @@
 {
-  "account_number": 15426670,
+  "account_number": 70439435,
   "username": "Smeg",
   "password": "Me",
-  "balance": 3333313
+  "balance": 98925,
+  "basket": [
+    "Leib"
+  ],
+  "loc": "./accounts"
 }

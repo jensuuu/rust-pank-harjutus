@@ -5,6 +5,9 @@ use crate::bank;
 use crate::bank::User;
 use crate::vahendid::hash_menu;
 use crate::vahendid::de_hash;
+use crate::vahendid::password_gen;
+use crate::poodlemine::Store;
+
 pub struct Menu;
 
 
@@ -29,6 +32,7 @@ impl Menu {
             println!("==============================");
             println!("4. Hashimine");
             println!("5. De-hashimine");
+            println!("6. Parooli genereerimine");
             println!("==============================");
 
 
@@ -70,6 +74,10 @@ impl Menu {
                     println!("De-hashimise tööriist");
                     de_hash::DeHashMenu::show()?;
                 },
+                6 => {
+                    println!("Parooli genereerimise tööriist");
+                    password_gen::PasswordGenerator::show()?;
+                },
                 _ => {
                     println!("Pole võimalik!");
                 }
@@ -95,7 +103,7 @@ impl Menu {
     pub fn account_menu(mut user: User, account: &str) -> io::Result<()> {
         loop {
             println!("\n==============================");
-            println!("       PANGA KONTOMENÜÜ");
+            println!("       KONTOMENÜÜ");
             println!("==============================");
             println!("Kasutaja: {}", user.username);
             println!("Saldo: {:.2} EUR", user.balance);
@@ -104,6 +112,7 @@ impl Menu {
             println!("2. Lisa raha");
             println!("3. Väljasta raha");
             println!("4. Logi välja");
+            println!("5. Mine poodi");
             println!("==============================");
 
             print!("Vali tegevus >> ");
@@ -179,11 +188,21 @@ impl Menu {
                     break;
                 }
 
+                "5" => {
+                     let store = Store::new();
+                    store.store_menu(&mut user, account)?;
+                }
+
+            
+
                 _ => {
                     println!("Vale valik!");
                 }
             }
         }
+
+
+  
 
         Ok(())
     }
